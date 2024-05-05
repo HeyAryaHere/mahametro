@@ -1,6 +1,10 @@
 # This Is the testing file for the FastAPI server. It contains the code for the FastAPI server that will be used to serve the crowd counting model and provide real-time count information through a video stream.Dont forget to change the video path in the code to the path of the video file on your system.Also DONT USE THIS FILE FOR TESTING THE MODEL. USE test.html for testing the model. 
-
-
+# -----------------------------------------------------------------------------------------------------------------------
+'''TODO: 1.ADD the endpoint for the video stream
+         2. ADD endpoints for Fall Detection 
+         3. ADD Endpoints for line crossing detection
+-------------------------------------------------------------------------------------------------------------------------
+         '''
 
 import cv2
 import torch
@@ -31,9 +35,11 @@ app.add_middleware(
 def load_model():
     # This function will be called once when the server starts
     '''
+    -----------------------------------------------------------------------------------------------------------------------
     Load the model and the transform function for the model
     Args:None
     Returns:None
+    -----------------------------------------------------------------------------------------------------------------------
     '''
     global model, transform
     from Model_files.crowd_counting.model_crowd import CSRNet
@@ -51,13 +57,17 @@ async def startup_event():
     load_model()
 
 async def count_people(frames):
-   '''This function will count the number of people in the frame
+  
+   '''
+    -----------------------------------------------------------------------------------------------------------------------
+   This function will count the number of people in the frame
     
     Args:The frames of the video from generate_frames
     
     Returns:Predicted count of people in the frame
     
     error:If the model is not loaded
+    -----------------------------------------------------------------------------------------------------------------------
    '''
    with torch.no_grad():
         img = torch.stack([transform(Image.fromarray(frame)) for frame in frames])
@@ -65,8 +75,10 @@ async def count_people(frames):
         predicted_counts = output.detach().cpu().sum(dim=[1, 2, 3])
         return int(predicted_counts.mean().item())
 
-async def generate_frames(video_path, interval=50):
+async def generate_frames(video_path, interval=25):
    '''
+   -----------------------------------------------------------------------------------------------------------------------
+   
    This function will generate frames from the video
    
    Args:video_path:Path of the video, interval:Interval between frames to be processed
@@ -74,7 +86,9 @@ async def generate_frames(video_path, interval=50):
    Returns:Frames of the video (Split by interval)
    
    error:If the video is not loaded
+   -----------------------------------------------------------------------------------------------------------------------
    '''
+   
    cap = cv2.VideoCapture(video_path)
    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
    frame_index = 0
@@ -96,6 +110,7 @@ class FrameCount(BaseModel):
     count: int
 
 """
+-----------------------------------------------------------------------------------------------------------------------
 Endpoint /count:
 - Description: This endpoint returns the current count of people detected in the video stream.
   The count is obtained by processing the video frames using a pre-trained deep learning model for crowd counting.
@@ -105,7 +120,8 @@ Endpoint /count:
     {
         "count": 25
     }
-"""
+-----------------------------------------------------------------------------------------------------------------------
+    """
 
 @app.get("/count", response_model=FrameCount)
 async def count_endpoint():
@@ -114,6 +130,7 @@ async def count_endpoint():
 
 
 """
+-----------------------------------------------------------------------------------------------------------------------
 Endpoint /stream_count:
 - Description: This endpoint streams the live count of people detected in the video stream.
   The count is continuously updated as new frames are processed, providing real-time information.
@@ -122,7 +139,8 @@ Endpoint /stream_count:
   The response is formatted as a server-sent event (SSE) stream, with each event containing the current count value.
 - Example response:
     data: 25
-"""
+-----------------------------------------------------------------------------------------------------------------------
+    """
 
 @app.get("/stream_count")
 async def stream_count():
@@ -133,7 +151,3 @@ async def stream_count():
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
-'''TODO: 1.ADD the endpoint for the video stream
-         2. 
-
-'''
