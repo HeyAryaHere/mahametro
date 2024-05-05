@@ -2,6 +2,8 @@
 
 import cv2
 from flask import Flask, Response
+import sys
+sys.path.append('./crowd_counting')
 from model import CSRNet
 import torch
 from torchvision import transforms
